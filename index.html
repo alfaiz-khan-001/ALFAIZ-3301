@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alfaiz</title>
+  <style>
+    body { margin: 0; background: #000; }
+    .scroll-area { height: 400vh; position: relative; }
+    .sticky {
+      position: sticky;
+      top: 0;
+      height: 70vh;
+      width: 100vw;
+      overflow: hidden;
+    }
+    #player, #player iframe {
+      width: 100vw;
+      height: 70vh;
+      border: 0;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="scroll-area" id="scrollArea">
+    <div class="sticky">
+      <div id="player"></div>
+    </div>
+  </div>
+
+  <script>
+    const area = document.getElementById('scrollArea');
+    let player = null;
+    let duration = 0;
+    let playerReady = false;
+    let ticking = false;
+
+    // YouTube API ko script ke through load karo
+    const tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    document.head.appendChild(tag);
+
+    // API load hone ke baad apne-aap call hota hai
+    window.onYouTubeIframeAPIReady = function () {
+      player = new YT.Player('player', {
+        videoId: 'gkSO4JmJ8L4',
+        playerVars: { controls: 0, playsinline: 1, modestbranding: 1, rel: 0, disablekb: 1 },
+        events: {
+          onReady: () => {
+            playerReady = true;
+            duration = player.getDuration();
+            player.mute();
+            player.seekTo(0, true);
+            player.pauseVideo();
+          }
+        }
+      });
+    };
+
+    function updateVideo() {
+      const rect = area.getBoundingClientRect();
+      const scrollable = area.offsetHeight - window.innerHeight;
+      let progress = -rect.top / scrollable;
+      progress = Math.min(Math.max(progress, 0), 1);
+
+      if (playerReady && duration) {
+        player.seekTo(progress * duration, true);
+      }
+      ticking = false;
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(updateVideo);
+        ticking = true;
+      }
+    }, { passive: true });
+  </script>
+
+</body>
+</html>
